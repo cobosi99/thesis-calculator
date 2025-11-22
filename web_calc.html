@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>글사랑 하드커버 논문 계산기 (자사몰 웹버전)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f4f4f7;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 760px;
+      width: 100%;
+      background: #ffffff;
+      margin: 16px;
+      padding: 20px 24px 24px 24px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.8fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 900px) {
+      .container {
+        display: block;
+      }
+    }
+
+    h1 {
+      font-size: 20px;
+      text-align: left;
+      margin: 0 0 4px 0;
+    }
+
+    .sub-title {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    .panel-left,
+    .panel-right {
+      width: 100%;
+    }
+
+    .group {
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .group:last-of-type {
+      border-bottom: none;
+    }
+
+    .group-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .row {
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+
+    .row label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .radio-group label {
+      font-weight: 500;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: #4a6df0;
+      box-shadow: 0 0 0 1px rgba(74, 109, 240, 0.2);
+    }
+
+    .hint {
+      font-size: 11px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    button {
+      flex: 1;
+      padding: 9px 0;
+      border-radius: 8px;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    #btn-calc {
+      background: #4a6df0;
+      color: white;
+    }
+
+    #btn-calc:hover {
+      background: #3c59c7;
+    }
+
+    #btn-reset {
+      background: #e0e0e5;
+      color: #333;
+    }
+
+    #btn-reset:hover {
+      background: #d3d3d8;
+    }
+
+    #btn-copy {
+      background: #f5f5f9;
+      color: #444;
+    }
+
+    #btn-copy:hover {
+      background: #ebebf2;
+    }
+
+    .footer {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #999;
+    }
+
+    .result-label {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .highlight {
+      color: #d11;
+      font-weight: 700;
+    }
+
+    /* 결과 영역 (textarea → div) */
+    .result-box {
+      width: 100%;
+      min-height: 260px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 13px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      white-space: pre-wrap;
+      background: #fafafa;
+      overflow-y: auto;
+    }
+
+    /* 빨간 글씨 (최종금액 전체 줄 + 수량 부분) */
+    .red {
+      color: #d11;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="panel-left">
+      <h1>글사랑 하드커버 논문 계산기</h1>
+      <div class="sub-title">자사몰 단가 기준 · 동판비 + 인쇄비 + 배송비(선택)</div>
+
+      <div class="group">
+        <div class="group-title">기본 옵션</div>
+
+        <div class="row">
+          <label>사이즈</label>
+          <div class="radio-group">
+            <label><input type="radio" name="size" value="B5" checked /> B5</label>
+            <label><input type="radio" name="size" value="A4" /> A4</label>
+          </div>
+        </div>
+
+        <div class="row">
+          <label>인쇄 방식</label>
+          <div class="radio-group">
+            <label><input type="radio" name="mode" value="단면" checked /> 단면</label>
+            <label><input type="radio" name="mode" value="양면" /> 양면</label>
+          </div>
+        </div>
+
+        <div class="row">
+          <label for="copies">부수</label>
+          <input type="number" id="copies" min="1" />
+          <div class="hint">20부 이상 주문 시에는 짝수 부수만 가능 (예: 20, 22, 24...)</div>
+        </div>
+
+        <div class="row">
+          <label for="totalPages">총 페이지</label>
+          <input type="number" id="totalPages" min="1" />
+          <div class="hint">컬러 + 흑백 포함 전체 페이지 수</div>
+        </div>
+
+        <div class="row">
+          <label for="colorPages">컬러 페이지</label>
+          <input type="number" id="colorPages" min="0" />
+          <div class="hint">비워두면 0p로 처리, 나머지는 자동으로 흑백 계산</div>
+        </div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="useShipping" />
+          <label for="useShipping">배송비 포함 (5,000원 / 30만원 이상 무료)</label>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">조합 인쇄 (선택)</div>
+
+        <div class="checkbox-row">
+          <input type="checkbox" id="useCombo" />
+          <label for="useCombo">조합 인쇄 사용 (흑백만 / 컬러 포함 부수 나눠 주문)</label>
+        </div>
+
+        <div class="row">
+          <label for="bwOnly">흑백만 부수</label>
+          <input type="number" id="bwOnly" min="0" disabled />
+          <div class="hint">해당 부수는 전체를 흑백으로 인쇄 (컬러 0p 기준)</div>
+        </div>
+
+        <div class="row">
+          <label for="mixCopies">컬러 포함 부수</label>
+          <input type="number" id="mixCopies" min="0" disabled />
+          <div class="hint">흑백만 부수 + 컬러 포함 부수 = 전체 부수여야 함</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button id="btn-calc">계산하기</button>
+        <button id="btn-reset" type="button">초기화</button>
+        <button id="btn-copy" type="button">결과 복사</button>
+      </div>
+
+      <div class="footer">
+        · 본 계산기는 <span class="highlight">자사몰 단가</span> 기준입니다.<br />
+        · 동판비 + 인쇄비(조합 선택 시 분리 계산) + 선택 배송비를 포함한 최종 금액을 출력합니다.
+      </div>
+    </div>
+
+    <div class="panel-right">
+      <div class="result-label">결과</div>
+      <!-- textarea → div 로 변경 -->
+      <div id="result" class="result-box"></div>
+    </div>
+  </div>
+
+  <script>
+    // ==============================
+    //  B5 동판비 (자사몰 표)
+    // ==============================
+    const B5_PLATE_STEPS = [
+      [6, 97500],
+      [10, 122000],
+      [15, 130000],
+      [20, 134000],
+      [22, 138000],
+      [24, 142000],
+      [26, 146000],
+      [28, 150000],
+      [30, 154000],
+      [32, 158000],
+      [34, 162000],
+      [36, 166000],
+      [38, 170000],
+      [40, 174000],
+      [42, 178000],
+      [44, 182000],
+      [46, 186000],
+      [48, 190000],
+      [50, 194000],
+      [52, 198000],
+      [54, 202000],
+      [56, 206000],
+      [58, 210000],
+      [60, 214000],
+      [62, 218000],
+      [64, 222000],
+      [66, 226000],
+      [68, 230000],
+      [70, 234000],
+      [72, 238000],
+      [74, 242000],
+      [76, 246000],
+      [78, 250000],
+      [80, 254000],
+      [82, 258000],
+      [84, 262000],
+      [86, 266000],
+      [88, 270000],
+      [90, 274000],
+      [92, 278000],
+      [94, 282000],
+      [96, 286000],
+      [98, 290000],
+      [100, 294000],
+      [102, 298000],
+      [104, 302000],
+      [106, 306000],
+      [108, 310000],
+      [110, 314000],
+      [112, 318000],
+      [114, 322000],
+      [116, 326000],
+      [118, 330000],
+      [120, 334000],
+      [122, 338000],
+      [124, 342000],
+      [126, 346000],
+      [128, 350000],
+      [130, 354000],
+      [132, 358000],
+      [134, 362000],
+      [136, 366000],
+      [138, 370000],
+      [140, 374000],
+      [142, 376000],
+      [144, 382000],
+      [146, 386000],
+      [148, 390000],
+      [150, 394000],
+    ];
+
+    function getB5PlateCost(copies) {
+      if (copies <= 0) return 0;
+      for (const [maxCopies, price] of B5_PLATE_STEPS) {
+        if (copies <= maxCopies) return price;
+      }
+      throw new Error("B5 동판비는 최대 150부까지만 설정되어 있습니다.");
+    }
+
+    function getB5PlateRange(copies) {
+      let prevMax = 0;
+      for (const [maxCopies] of B5_PLATE_STEPS) {
+        const start = prevMax + 1;
+        const end = maxCopies;
+        if (copies <= end) {
+          if (start === end) return `${end}부`;
+          return `${start}~${end}부`;
+        }
+        prevMax = end;
+      }
+      const last = B5_PLATE_STEPS[B5_PLATE_STEPS.length - 1][0];
+      return `1~${last}부`;
+    }
+
+    // =========================================
+    //  B5 흑백 단면 (자사몰 표)
+    // =========================================
+    function getB5BwSinglePrice(pages) {
+      if (pages <= 0) return 0;
+      if (pages <= 50) return 2000;
+      if (pages > 400)
+        throw new Error("B5 흑백 단면 인쇄비는 최대 400p까지 설정되어 있습니다.");
+      const over = pages - 50;
+      const steps = Math.ceil(over / 5);
+      return 2000 + steps * 200;
+    }
+
+    function getB5BwSingleRange(pages) {
+      if (pages <= 0) return "0p";
+      if (pages <= 50) return "1~50p";
+      if (pages > 400) return "400p 초과";
+      const over = pages - 50;
+      const steps = Math.ceil(over / 5);
+      const end = 50 + steps * 5;
+      const start = end - 4;
+      return `${start}~${end}p`;
+    }
+
+    // =========================================
+    //  B5 흑백 양면 (자사몰 표)
+    // =========================================
+    function getB5BwDoublePrice(pages) {
+      if (pages <= 0) return 0;
+      if (pages <= 50) return 1900;
+      if (pages > 400)
+        throw new Error("B5 흑백 양면 인쇄비는 최대 400p까지 설정되어 있습니다.");
+      const over = pages - 50;
+      const steps = Math.ceil(over / 5);
+      return 1900 + steps * 190;
+    }
+
+    function getB5BwDoubleRange(pages) {
+      if (pages <= 0) return "0p";
+      if (pages <= 50) return "1~50p";
+      if (pages > 400) return "400p 초과";
+      const over = pages - 50;
+      const steps = Math.ceil(over / 5);
+      const end = 50 + steps * 5;
+      const start = end - 4;
+      return `${start}~${end}p`;
+    }
+
+    // =========================================
+    //  B5 컬러 단면 – 자사몰
+    // =========================================
+    function getB5ColorSinglePriceMall(pages) {
+      if (pages <= 0) return 0;
+      if (pages <= 5) return 830;
+      if (pages <= 10) return 1650;
+      if (pages > 200)
+        throw new Error(
+          "B5 컬러 단면 인쇄비(자사몰)는 최대 200p까지 설정되어 있습니다."
+        );
+      const over = pages - 10;
+      const steps = Math.ceil(over / 2);
+      return 1650 + steps * 330;
+    }
+
+    function getB5ColorSingleRangeMall(pages) {
+      if (pages <= 0) return "0p";
+      if (pages <= 5) return "1~5p";
+      if (pages <= 10) return "6~10p";
+      if (pages > 200) return "200p 초과";
+      const over = pages - 10;
+      const steps = Math.ceil(over / 2);
+      const end = 10 + steps * 2;
+      const start = end - 1;
+      return `${start}~${end}p`;
+    }
+
+    // =========================================
+    //  B5 컬러 양면 – 자사몰
+    // =========================================
+    function getB5ColorDoublePriceMall(pages) {
+      if (pages <= 0) return 0;
+      if (pages <= 4) return 750;
+      if (pages <= 8) return 1120;
+      if (pages <= 10) return 1400;
+      if (pages > 200)
+        throw new Error(
+          "B5 컬러 양면 인쇄비(자사몰)는 최대 200p까지 설정되어 있습니다."
+        );
+      const over = pages - 10;
+      const steps = Math.ceil(over / 2);
+      return 1400 + steps * 280;
+    }
+
+    function getB5ColorDoubleRangeMall(pages) {
+      if (pages <= 0) return "0p";
+      if (pages <= 4) return "1~4p";
+      if (pages <= 8) return "5~8p";
+      if (pages <= 10) return "9~10p";
+      if (pages > 200) return "200p 초과";
+      const over = pages - 10;
+      const steps = Math.ceil(over / 2);
+      const end = 10 + steps * 2;
+      const start = end - 1;
+      return `${start}~${end}p`;
+    }
+
+    // ==============================
+    //  A4 자사몰용 가격표 텍스트
+    // ==============================
+    const A4_MALL_PLATE_TEXT = `
+1~6부 +114,000원, 7~10부 +134,000원, 11~15부 +155,000원, 16~20부 +170,000원,
+22부 +174,000원, 24부 +179,000원, 26부 +184,000원, 28부 +189,000원, 30부 +194,000원,
+32부 +199,000원, 34부 +204,000원, 36부 +209,000원, 38부 +214,000원, 40부 +219,000원,
+42부 +224,000원, 44부 +229,000원, 46부 +234,000원, 48부 +239,000원, 50부 +244,000원,
+52부 +249,000원, 54부 +254,000원, 56부 +259,000원, 58부 +264,000원, 60부 +269,000원,
+62부 +274,000원, 64부 +279,000원, 66부 +284,000원, 68부 +289,000원, 70부 +294,000원,
+72부 +299,000원, 74부 +304,000원, 76부 +309,000원, 78부 +314,000원, 80부 +319,000원,
+82부 +324,000원, 84부 +329,000원, 86부 +334,000원, 88부 +339,000원, 90부 +344,000원,
+92부 +349,000원, 94부 +354,000원, 96부 +359,000원, 98부 +364,000원, 100부 +369,000원,
+102부 +374,000원, 104부 +379,000원, 106부 +384,000원, 108부 +389,000원, 110부 +394,000원,
+112부 +399,000원, 114부 +404,000원, 116부 +409,000원, 118부 +414,000원, 120부 +419,000원,
+122부 +424,000원, 124부 +429,000원, 126부 +434,000원, 128부 +439,000원, 130부 +444,000원,
+132부 +449,000원, 134부 +454,000원, 136부 +459,000원, 138부 +464,000원, 140부 +469,000원,
+142부 +474,000원, 144부 +479,000원, 146부 +484,000원, 148부 +489,000원, 150부 +494,000원
+`;
+
+    const A4_MALL_BW_SINGLE_TEXT = `
+1~50p +2,200원
+51~55p +2,420원
+56~60p +2,640원
+61~65p +2,860원
+66~70p +3,080원
+71~75p +3,300원
+76~80p +3,520원
+81~85p +3,740원
+86~90p +3,960원
+91~95p +4,180원
+96~100p +4,400원
+101~105p +4,620원
+106~110p +4,840원
+111~115p +5,060원
+116~120p +5,280원
+121~125p +5,500원
+126~130p +5,720원
+131~135p +5,940원
+136~140p +6,160원
+141~145p +6,400원
+146~150p +6,640원
+151~155p +6,860원
+156~160p +7,080원
+161~165p +7,300원
+166~170p +7,520원
+171~175p +7,740원
+176~180p +7,960원
+181~185p +8,180원
+186~190p +8,400원
+191~195p +8,620원
+196~200p +8,840원
+201~205p +9,060원
+206~210p +9,280원
+211~215p +9,500원
+216~220p +9,720원
+221~225p +9,940원
+226~230p +10,160원
+231~235p +10,380원
+236~240p +10,600원
+241~245p +10,820원
+246~250p +11,000원
+251~255p +11,220원
+256~260p +11,440원
+261~265p +11,660원
+266~270p +11,880원
+271~275p +12,100원
+276~280p +12,320원
+281~285p +12,540원
+286~290p +12,760원
+291~295p +12,980원
+296~300p +13,200원
+301~305p +13,420원
+306~310p +13,640원
+311~315p +13,860원
+316~320p +14,080원
+321~325p +14,300원
+326~330p +14,520원
+331~335p +14,740원
+336~340p +14,960원
+341~345p +15,180원
+346~350p +15,400원
+351~355p +15,620원
+356~360p +15,840원
+361~365p +16,060원
+366~370p +16,280원
+371~375p +16,500원
+376~380p +16,720원
+381~385p +16,940원
+386~390p +17,160원
+391~395p +17,380원
+396~400p +17,600원
+`;
+
+    const A4_MALL_COLOR_SINGLE_TEXT = `
+1~5p +1,000원
+6~8p +1,600원
+10p +2,000원
+12p +2,400원
+14p +2,800원
+16p +3,200원
+18p +3,600원
+20p +4,000원
+22p +4,400원
+24p +4,800원
+26p +5,200원
+28p +5,600원
+30p +6,000원
+32p +6,400원
+34p +6,800원
+36p +7,200원
+38p +7,600원
+40p +8,000원
+42p +8,400원
+44p +8,800원
+46p +9,200원
+48p +9,600원
+50p +10,000원
+52p +10,400원
+54p +10,800원
+56p +11,200원
+58p +11,400원
+60p +12,000원
+62p +12,400원
+64p +12,800원
+66p +13,200원
+68p +13,600원
+70p +14,000원
+72p +14,400원
+74p +14,800원
+76p +15,200원
+78p +15,600원
+80p +16,000원
+82p +16,400원
+84p +16,800원
+86p +17,200원
+88p +17,600원
+90p +18,000원
+92p +18,400원
+94p +18,800원
+96p +19,200원
+98p +19,600원
+100p +20,000원
+102p +20,400원
+104p +20,800원
+106p +21,200원
+108p +21,600원
+110p +22,000원
+112p +22,400원
+114p +22,800원
+116p +23,200원
+118p +23,600원
+120p +24,000원
+122p +24,400원
+124p +24,800원
+126p +25,200원
+128p +25,600원
+130p +26,000원
+132p +26,400원
+134p +26,800원
+136p +27,200원
+138p +27,600원
+140p +28,000원
+142p +28,400원
+144p +28,800원
+146p +29,200원
+148p +29,600원
+150p +30,000원
+152p +30,400원
+154p +30,800원
+156p +31,200원
+158p +31,600원
+160p +32,000원
+162p +32,400원
+164p +32,800원
+166p +33,200원
+168p +33,600원
+170p +34,000원
+172p +34,400원
+174p +34,800원
+176p +35,200원
+178p +35,600원
+180p +36,000원
+182p +36,400원
+184p +36,800원
+186p +37,200원
+188p +37,600원
+190p +38,000원
+192p +38,400원
+194p +38,800원
+196p +39,200원
+198p +39,600원
+200p +40,000원
+`;
+
+    const A4_MALL_BW_DOUBLE_TEXT = `
+1~50p +2,100원
+51~55p +2,310원
+56~60p +2,520원
+61~65p +2,730원
+66~70p +2,940원
+71~75p +3,150원
+76~80p +3,360원
+81~85p +3,570원
+86~90p +3,780원
+91~95p +3,850원
+96~100p +4,000원
+101~105p +4,200원
+106~110p +4,400원
+111~115p +4,600원
+116~120p +4,800원
+121~125p +5,000원
+126~130p +5,200원
+131~135p +5,400원
+136~140p +5,600원
+141~145p +5,800원
+146~150p +6,000원
+151~155p +6,200원
+156~160p +6,400원
+161~165p +6,600원
+166~170p +6,800원
+171~175p +7,000원
+176~180p +7,200원
+181~185p +7,400원
+186~190p +7,600원
+191~195p +7,800원
+196~200p +8,000원
+201~205p +8,200원
+206~210p +8,400원
+211~215p +8,600원
+216~220p +8,800원
+221~225p +9,000원
+226~230p +9,200원
+231~235p +9,400원
+236~240p +9,600원
+241~245p +9,800원
+246~250p +10,000원
+251~255p +10,200원
+256~260p +10,400원
+261~265p +10,600원
+266~270p +10,800원
+271~275p +11,000원
+276~280p +11,200원
+281~285p +11,400원
+286~290p +11,600원
+291~295p +11,800원
+296~300p +12,000원
+301~305p +12,200원
+306~310p +12,400원
+311~315p +12,600원
+316~320p +12,800원
+321~325p +13,000원
+326~330p +13,200원
+331~335p +13,400원
+336~340p +13,600원
+341~345p +13,800원
+346~350p +14,000원
+351~355p +14,200원
+356~360p +14,400원
+361~365p +14,600원
+366~370p +14,800원
+371~375p +15,000원
+376~380p +15,200원
+381~385p +15,400원
+386~390p +15,600원
+391~395p +15,800원
+396~400p +16,000원
+`;
+
+    const A4_MALL_COLOR_DOUBLE_TEXT = `
+1~5p +1,050원
+6~8p +1,440원
+9~10p +1,800원
+12p +2,160원
+14p +2,520원
+16p +2,880원
+18p +3,240원
+20p +3,600원
+22p +3,960원
+24p +4,320원
+26p +4,680원
+28p +5,040원
+30p +5,400원
+32p +5,760원
+34p +6,120원
+36p +6,480원
+38p +6,840원
+40p +7,200원
+42p +7,560원
+44p +7,920원
+46p +8,280원
+48p +8,640원
+50p +9,000원
+52p +9,360원
+54p +9,720원
+56p +10,080원
+58p +10,440원
+60p +10,800원
+62p +11,160원
+64p +11,520원
+66p +11,880원
+68p +12,240원
+70p +12,600원
+72p +12,960원
+74p +13,320원
+76p +13,680원
+78p +14,040원
+80p +14,400원
+82p +14,760원
+84p +15,120원
+86p +15,480원
+88p +15,840원
+90p +16,200원
+92p +16,560원
+94p +16,920원
+96p +17,280원
+98p +17,640원
+100p +18,000원
+102p +18,360원
+104p +18,720원
+106p +19,080원
+108p +19,440원
+110p +19,800원
+112p +20,160원
+114p +20,520원
+116p +20,880원
+118p +21,240원
+120p +21,600원
+122p +21,960원
+124p +22,320원
+126p +22,680원
+128p +23,040원
+130p +23,400원
+132p +23,760원
+134p +24,120원
+136p +24,480원
+138p +24,840원
+140p +25,200원
+142p +25,560원
+144p +25,920원
+146p +26,280원
+148p +26,640원
+150p +27,000원
+152p +27,360원
+154p +27,720원
+156p +28,080원
+158p +28,440원
+160p +28,800원
+162p +29,160원
+164p +29,520원
+166p +29,880원
+168p +30,240원
+170p +30,600원
+172p +30,960원
+174p +31,320원
+176p +31,680원
+178p +32,040원
+180p +32,400원
+182p +32,760원
+184p +33,120원
+186p +33,480원
+188p +33,840원
+190p +34,200원
+192p +34,560원
+194p +34,920원
+196p +35,280원
+198p +35,640원
+200p +36,000원
+`;
+
+    // ==============================
+    //  파싱 유틸
+    // ==============================
+    function parseStepsCopies(text) {
+      const steps = [];
+      const regex = /(\d+)(?:~(\d+))?부\s*\+\s*([\d,]+)원/g;
+      let m;
+      while ((m = regex.exec(text)) !== null) {
+        const end = m[2] ? parseInt(m[2], 10) : parseInt(m[1], 10);
+        const price = parseInt(m[3].replace(/,/g, ""), 10);
+        steps.push([end, price]);
+      }
+      return steps;
+    }
+
+    function parseStepsPages(text) {
+      const steps = [];
+      const regex = /(\d+)(?:~(\d+))?p\s*\+\s*([\d,]+)원/g;
+      let m;
+      while ((m = regex.exec(text)) !== null) {
+        const end = m[2] ? parseInt(m[2], 10) : parseInt(m[1], 10);
+        const price = parseInt(m[3].replace(/,/g, ""), 10);
+        steps.push([end, price]);
+      }
+      return steps;
+    }
+
+    const A4_MALL_PLATE_STEPS = parseStepsCopies(A4_MALL_PLATE_TEXT);
+    const A4_MALL_BW_SINGLE_STEPS = parseStepsPages(A4_MALL_BW_SINGLE_TEXT);
+    const A4_MALL_COLOR_SINGLE_STEPS = parseStepsPages(
+      A4_MALL_COLOR_SINGLE_TEXT
+    );
+    const A4_MALL_BW_DOUBLE_STEPS = parseStepsPages(A4_MALL_BW_DOUBLE_TEXT);
+    const A4_MALL_COLOR_DOUBLE_STEPS = parseStepsPages(
+      A4_MALL_COLOR_DOUBLE_TEXT
+    );
+
+    function lookupPages(pages, steps, maxDesc) {
+      if (pages <= 0) return 0;
+      const maxPage = steps[steps.length - 1][0];
+      if (pages > maxPage)
+        throw new Error(`${maxDesc} 최대 ${maxPage}p까지 설정되어 있습니다.`);
+      for (const [maxP, price] of steps) {
+        if (pages <= maxP) return price;
+      }
+      throw new Error(`${maxDesc} 구간을 찾을 수 없습니다.`);
+    }
+
+    function getA4RangeLabel(pages, steps) {
+      if (pages <= 0) return "0p";
+      const maxPage = steps[steps.length - 1][0];
+      if (pages > maxPage) return `${maxPage}p 초과`;
+      let prevMax = 0;
+      for (const [maxP] of steps) {
+        const start = prevMax + 1;
+        const end = maxP;
+        if (pages <= end) return `${start}~${end}p`;
+        prevMax = end;
+      }
+      return `1~${maxPage}p`;
+    }
+
+    function getA4MallPlateCost(copies) {
+      if (copies <= 0) return 0;
+      for (const [maxC, price] of A4_MALL_PLATE_STEPS) {
+        if (copies <= maxC) return price;
+      }
+      throw new Error("A4(자사몰) 동판비는 최대 150부까지만 설정되어 있습니다.");
+    }
+
+    function getA4MallPlateRange(copies) {
+      let prevMax = 0;
+      for (const [maxC] of A4_MALL_PLATE_STEPS) {
+        const start = prevMax + 1;
+        const end = maxC;
+        if (copies <= end) {
+          if (start === end) return `${end}부`;
+          return `${start}~${end}부`;
+        }
+        prevMax = end;
+      }
+      const last = A4_MALL_PLATE_STEPS[A4_MALL_PLATE_STEPS.length - 1][0];
+      return `1~${last}부`;
+    }
+
+    function getA4MallBwSinglePrice(pages) {
+      return lookupPages(pages, A4_MALL_BW_SINGLE_STEPS, "A4 자사몰 흑백 단면 인쇄비는");
+    }
+
+    function getA4MallColorSinglePrice(pages) {
+      return lookupPages(
+        pages,
+        A4_MALL_COLOR_SINGLE_STEPS,
+        "A4 자사몰 컬러 단면 인쇄비는"
+      );
+    }
+
+    function getA4MallBwDoublePrice(pages) {
+      return lookupPages(
+        pages,
+        A4_MALL_BW_DOUBLE_STEPS,
+        "A4 자사몰 흑백 양면 인쇄비는"
+      );
+    }
+
+    function getA4MallColorDoublePrice(pages) {
+      return lookupPages(
+        pages,
+        A4_MALL_COLOR_DOUBLE_STEPS,
+        "A4 자사몰 컬러 양면 인쇄비는"
+      );
+    }
+
+    // ==============================
+    //  공통: 동판비 / 인쇄비 선택 (자사몰 고정)
+    // ==============================
+    function getPlateCost(size, copies) {
+      if (size === "B5") return getB5PlateCost(copies);
+      if (size === "A4") return getA4MallPlateCost(copies);
+      throw new Error("지원하지 않는 사이즈입니다.");
+    }
+
+    function getPlateRangeLabel(size, copies) {
+      if (size === "B5") return getB5PlateRange(copies);
+      if (size === "A4") return getA4MallPlateRange(copies);
+      return "";
+    }
+
+    function getUnitPrices(size, mode, bwPages, colorPages) {
+      let bwPrice1, colorPrice1;
+      if (size === "B5") {
+        if (mode === "단면") {
+          bwPrice1 = getB5BwSinglePrice(bwPages);
+          colorPrice1 = getB5ColorSinglePriceMall(colorPages);
+        } else {
+          bwPrice1 = getB5BwDoublePrice(bwPages);
+          colorPrice1 = getB5ColorDoublePriceMall(colorPages);
+        }
+      } else if (size === "A4") {
+        if (mode === "단면") {
+          bwPrice1 = getA4MallBwSinglePrice(bwPages);
+          colorPrice1 = getA4MallColorSinglePrice(colorPages);
+        } else {
+          bwPrice1 = getA4MallBwDoublePrice(bwPages);
+          colorPrice1 = getA4MallColorDoublePrice(colorPages);
+        }
+      } else {
+        throw new Error("지원하지 않는 사이즈입니다.");
+      }
+      return { bwPrice1, colorPrice1 };
+    }
+
+    function getPageRangeLabel(size, mode, kind, pages) {
+      if (pages <= 0) return "0p";
+
+      if (size === "B5") {
+        if (kind === "흑백") {
+          return mode === "단면"
+            ? getB5BwSingleRange(pages)
+            : getB5BwDoubleRange(pages);
+        } else {
+          if (mode === "단면") return getB5ColorSingleRangeMall(pages);
+          return getB5ColorDoubleRangeMall(pages);
+        }
+      } else if (size === "A4") {
+        if (kind === "흑백") {
+          if (mode === "단면")
+            return getA4RangeLabel(pages, A4_MALL_BW_SINGLE_STEPS);
+          return getA4RangeLabel(pages, A4_MALL_BW_DOUBLE_STEPS);
+        } else {
+          if (mode === "단면")
+            return getA4RangeLabel(pages, A4_MALL_COLOR_SINGLE_STEPS);
+          return getA4RangeLabel(pages, A4_MALL_COLOR_DOUBLE_STEPS);
+        }
+      }
+      return `${pages}p`;
+    }
+
+    // ==============================
+    //  UI / 계산 로직
+    // ==============================
+    const resultBox = document.getElementById("result");
+    const useComboEl = document.getElementById("useCombo");
+    const bwOnlyEl = document.getElementById("bwOnly");
+    const mixCopiesEl = document.getElementById("mixCopies");
+
+    useComboEl.addEventListener("change", () => {
+      const enabled = useComboEl.checked;
+      bwOnlyEl.disabled = !enabled;
+      mixCopiesEl.disabled = !enabled;
+    });
+
+    function formatNumber(n) {
+      return n.toLocaleString("ko-KR");
+    }
+
+    function getRadio(name) {
+      const el = document.querySelector(`input[name="${name}"]:checked`);
+      return el ? el.value : null;
+    }
+
+    function calculate() {
+      resultBox.innerHTML = "";
+      try {
+        const size = getRadio("size"); // B5 / A4
+        const mode = getRadio("mode"); // 단면 / 양면
+
+        const copiesStr = document.getElementById("copies").value.trim();
+        const totalPagesStr = document
+          .getElementById("totalPages")
+          .value.trim();
+        const colorPagesStr = document
+          .getElementById("colorPages")
+          .value.trim();
+        const useShipping = document.getElementById("useShipping").checked;
+        const useCombo = document.getElementById("useCombo").checked;
+
+        if (!copiesStr || !totalPagesStr)
+          throw new Error("부수와 총 페이지를 입력해주세요.");
+
+        const copies = parseInt(copiesStr, 10);
+        const totalPages = parseInt(totalPagesStr, 10);
+
+        if (Number.isNaN(copies) || Number.isNaN(totalPages))
+          throw new Error("부수와 총 페이지는 숫자로 입력해주세요.");
+        if (copies <= 0 || totalPages <= 0)
+          throw new Error("부수와 총 페이지는 1 이상이어야 합니다.");
+
+        if (copies >= 20 && copies % 2 === 1)
+          throw new Error("20부 이상은 짝수 부수만 주문 가능합니다. (예: 20, 22, 24 ...)");
+
+        let colorPages = 0;
+        if (colorPagesStr !== "") {
+          colorPages = parseInt(colorPagesStr, 10);
+          if (Number.isNaN(colorPages))
+            throw new Error("컬러 페이지는 숫자로 입력하거나 비워두세요.");
+        }
+
+        if (colorPages < 0)
+          throw new Error("컬러 페이지는 0 이상이어야 합니다.");
+        if (colorPages > totalPages)
+          throw new Error("컬러 페이지 수가 총 페이지 수보다 많을 수 없습니다.");
+
+        const bwPages = totalPages - colorPages;
+
+        const priceModeLabel = "자사몰";
+        const plateCostBase = getPlateCost(size, copies);
+        const plateLabel = getPlateRangeLabel(size, copies);
+
+        let outText = "";
+        let outHtml = "";
+
+        function addLine(text, htmlOverride) {
+          outText += text + "\n";
+          if (htmlOverride !== undefined) {
+            outHtml += htmlOverride + "<br>";
+          } else {
+            // 공백/줄바꿈만 유지하면 되므로 그대로 사용
+            outHtml += text + "<br>";
+          }
+        }
+
+        const isMall = true; // 항상 자사몰
+
+        let totalPrintFinal = 0;
+        let shippingFee = 0;
+        let finalTotal = 0;
+
+        // 공통 헤더
+        addLine(
+          `[${size} ${mode} 인쇄 기준 / ${priceModeLabel}]`
+        );
+        addLine(`부수: ${copies}부`);
+        addLine(`총 페이지: ${totalPages}p`);
+        addLine(`컬러 페이지: ${colorPages}p`);
+        addLine(`흑백 페이지: ${bwPages}p`);
+        addLine(""); // 빈 줄
+
+        if (!useCombo) {
+          // ===== 단일 인쇄 =====
+          const { bwPrice1, colorPrice1 } = getUnitPrices(
+            size,
+            mode,
+            bwPages,
+            colorPages
+          );
+          const oneBookPrintBase = bwPrice1 + colorPrice1;
+          const totalPrintBase = oneBookPrintBase * copies;
+
+          let extraPrint10 = 0;
+          if (isMall) {
+            if (bwPages > 0) extraPrint10 += 10 * copies;
+            if (colorPages > 0) extraPrint10 += 10 * copies;
+          }
+
+          totalPrintFinal = totalPrintBase + extraPrint10;
+          const extraPlate10 = isMall ? 10 : 0;
+
+          let subtotal = plateCostBase + extraPlate10 + totalPrintFinal;
+
+          if (useShipping) {
+            if (subtotal < 300000) {
+              shippingFee = 5000;
+              subtotal += shippingFee;
+            }
+          }
+
+          finalTotal = subtotal;
+
+          addLine(
+            `전체 인쇄비 (${copies}부): ${formatNumber(totalPrintFinal)}원`
+          );
+
+          if (useShipping) {
+            if (shippingFee === 0) {
+              addLine(`배송비: 0원 (30만원 이상 무료)`);
+            } else {
+              addLine(`배송비: ${formatNumber(shippingFee)}원`);
+            }
+            const finalLine = `최종 금액 (동판비+배송비 포함): ${formatNumber(
+              finalTotal
+            )}원`;
+            const finalHtml = `<span class="red">${finalLine}</span>`;
+            addLine(finalLine, finalHtml); // 전체 줄 빨간색
+          } else {
+            const finalLine = `최종 금액 (동판비 포함): ${formatNumber(
+              finalTotal
+            )}원`;
+            const finalHtml = `<span class="red">${finalLine}</span>`;
+            addLine(finalLine, finalHtml); // 전체 줄 빨간색
+          }
+
+          addLine(""); // 빈 줄
+          addLine("★주문 방법★");
+
+          // 동판비 수량만 빨간색
+          {
+            const textLine = `동판비(${plateLabel}) 선택 -> 1개`;
+            const htmlLine = `동판비(${plateLabel}) 선택 -> <span class="red">1개</span>`;
+            addLine(textLine, htmlLine);
+          }
+
+          if (bwPages > 0) {
+            const bwRange = getPageRangeLabel(size, mode, "흑백", bwPages);
+            const textLine = `${size} 흑백${mode}(${bwRange}) 선택 -> ${copies}개`;
+            const htmlLine = `${size} 흑백${mode}(${bwRange}) 선택 -> <span class="red">${copies}개</span>`;
+            addLine(textLine, htmlLine);
+          }
+          if (colorPages > 0) {
+            const colorRange = getPageRangeLabel(
+              size,
+              mode,
+              "컬러",
+              colorPages
+            );
+            const textLine = `${size} 컬러${mode}(${colorRange}) 선택 -> ${copies}개`;
+            const htmlLine = `${size} 컬러${mode}(${colorRange}) 선택 -> <span class="red">${copies}개</span>`;
+            addLine(textLine, htmlLine);
+          }
+        } else {
+          // ===== 조합 인쇄 =====
+          const bwOnlyStr = bwOnlyEl.value.trim();
+          const mixStr = mixCopiesEl.value.trim();
+
+          if (!bwOnlyStr && !mixStr) {
+            throw new Error(
+              "조합 인쇄를 사용할 경우, 흑백만 부수 또는 컬러 포함 부수를 입력해주세요."
+            );
+          }
+
+          const bwOnly = bwOnlyStr ? parseInt(bwOnlyStr, 10) : 0;
+          const mix = mixStr ? parseInt(mixStr, 10) : 0;
+
+          if (Number.isNaN(bwOnly) || Number.isNaN(mix)) {
+            throw new Error("조합 부수는 숫자로 입력해주세요.");
+          }
+          if (bwOnly < 0 || mix < 0) {
+            throw new Error("조합 부수는 0 이상이어야 합니다.");
+          }
+          if (bwOnly + mix !== copies) {
+            throw new Error(
+              "흑백만 부수 + 컬러 포함 부수의 합이 전체 부수와 같아야 합니다."
+            );
+          }
+
+          const bwOnlyBwPages = totalPages;
+          const bwOnlyColorPages = 0;
+          const { bwPrice1: bwOnlyBwPrice1, colorPrice1: bwOnlyColorPrice1 } =
+            getUnitPrices(size, mode, bwOnlyBwPages, bwOnlyColorPages);
+          const bwOnlyOneBookBase = bwOnlyBwPrice1 + bwOnlyColorPrice1;
+          const bwOnlyTotalBase = bwOnlyOneBookBase * bwOnly;
+
+          const mixBwPages = totalPages - colorPages;
+          const mixColorPages = colorPages;
+          const { bwPrice1: mixBwPrice1, colorPrice1: mixColorPrice1 } =
+            getUnitPrices(size, mode, mixBwPages, mixColorPages);
+          const mixOneBookBase = mixBwPrice1 + mixColorPrice1;
+          const mixTotalBase = mixOneBookBase * mix;
+
+          const totalPrintBase = bwOnlyTotalBase + mixTotalBase;
+
+          let extraPrint10 = 0;
+          if (isMall) {
+            if (bwOnly > 0 && bwOnlyBwPages > 0) {
+              extraPrint10 += 10 * bwOnly;
+            }
+            if (mix > 0) {
+              if (mixBwPages > 0) extraPrint10 += 10 * mix;
+              if (mixColorPages > 0) extraPrint10 += 10 * mix;
+            }
+          }
+
+          totalPrintFinal = totalPrintBase + extraPrint10;
+          const extraPlate10 = isMall ? 10 : 0;
+          let subtotal = plateCostBase + extraPlate10 + totalPrintFinal;
+
+          if (useShipping) {
+            if (subtotal < 300000) {
+              shippingFee = 5000;
+              subtotal += shippingFee;
+            }
+          }
+          finalTotal = subtotal;
+
+          addLine(
+            `전체 인쇄비 (${copies}부): ${formatNumber(totalPrintFinal)}원`
+          );
+          if (useShipping) {
+            if (shippingFee === 0) {
+              addLine(`배송비: 0원 (30만원 이상 무료)`);
+            } else {
+              addLine(`배송비: ${formatNumber(shippingFee)}원`);
+            }
+            const finalLine = `최종 금액 (동판비+배송비 포함): ${formatNumber(
+              finalTotal
+            )}원`;
+            const finalHtml = `<span class="red">${finalLine}</span>`;
+            addLine(finalLine, finalHtml);
+          } else {
+            const finalLine = `최종 금액 (동판비 포함): ${formatNumber(
+              finalTotal
+            )}원`;
+            const finalHtml = `<span class="red">${finalLine}</span>`;
+            addLine(finalLine, finalHtml);
+          }
+
+          addLine("");
+          addLine("★주문 방법★");
+
+          // 동판비 수량
+          {
+            const textLine = `동판비(${plateLabel}) 선택 -> 1개`;
+            const htmlLine = `동판비(${plateLabel}) 선택 -> <span class="red">1개</span>`;
+            addLine(textLine, htmlLine);
+          }
+
+          if (bwOnly > 0 && bwOnlyBwPages > 0) {
+            const bwRange = getPageRangeLabel(
+              size,
+              mode,
+              "흑백",
+              bwOnlyBwPages
+            );
+            const textLine = `${size} 흑백${mode}(${bwRange}) 선택 -> ${bwOnly}개`;
+            const htmlLine = `${size} 흑백${mode}(${bwRange}) 선택 -> <span class="red">${bwOnly}개</span>`;
+            addLine(textLine, htmlLine);
+          }
+
+          if (mix > 0 && mixBwPages > 0) {
+            const bwRangeMix = getPageRangeLabel(
+              size,
+              mode,
+              "흑백",
+              mixBwPages
+            );
+            const textLine = `${size} 흑백${mode}(${bwRangeMix}) 선택 -> ${mix}개`;
+            const htmlLine = `${size} 흑백${mode}(${bwRangeMix}) 선택 -> <span class="red">${mix}개</span>`;
+            addLine(textLine, htmlLine);
+          }
+
+          if (mix > 0 && mixColorPages > 0) {
+            const colorRangeMix = getPageRangeLabel(
+              size,
+              mode,
+              "컬러",
+              mixColorPages
+            );
+            const textLine = `${size} 컬러${mode}(${colorRangeMix}) 선택 -> ${mix}개`;
+            const htmlLine = `${size} 컬러${mode}(${colorRangeMix}) 선택 -> <span class="red">${mix}개</span>`;
+            addLine(textLine, htmlLine);
+          }
+        }
+
+        // 화면에는 HTML (색 적용)
+        resultBox.innerHTML = outHtml;
+        // 복사용 텍스트는 outText (copyResult에서 innerText로 처리)
+      } catch (err) {
+        alert(err.message || err);
+      }
+    }
+
+    function resetForm() {
+      document.querySelector('input[name="size"][value="B5"]').checked = true;
+      document.querySelector('input[name="mode"][value="단면"]').checked = true;
+      document.getElementById("copies").value = "";
+      document.getElementById("totalPages").value = "";
+      document.getElementById("colorPages").value = "";
+      document.getElementById("useShipping").checked = false;
+      useComboEl.checked = false;
+      bwOnlyEl.value = "";
+      mixCopiesEl.value = "";
+      bwOnlyEl.disabled = true;
+      mixCopiesEl.disabled = true;
+      resultBox.innerHTML = "";
+    }
+
+    function copyResult() {
+      const text = resultBox.innerText; // HTML 말고 텍스트만 복사
+      if (!text.trim()) {
+        alert("복사할 결과가 없습니다.");
+        return;
+      }
+      navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          alert("결과 내용을 클립보드에 복사했습니다.");
+        })
+        .catch(() => {
+          alert("클립보드 복사 중 오류가 발생했습니다.");
+        });
+    }
+
+    document.getElementById("btn-calc").addEventListener("click", calculate);
+    document.getElementById("btn-reset").addEventListener("click", resetForm);
+    document.getElementById("btn-copy").addEventListener("click", copyResult);
+  </script>
+</body>
+</html>
