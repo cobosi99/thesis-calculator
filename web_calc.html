@@ -1127,7 +1127,6 @@
           if (htmlOverride !== undefined) {
             outHtml += htmlOverride + "<br>";
           } else {
-            // 공백/줄바꿈만 유지하면 되므로 그대로 사용
             outHtml += text + "<br>";
           }
         }
@@ -1363,9 +1362,17 @@
           }
         }
 
-        // 화면에는 HTML (색 적용)
+        // ----- 자사몰 링크 추가 (마지막 줄) -----
+        const siteUrl = "https://gulsarang.com";
+        addLine(""); // 빈 줄 하나
+        addLine(
+          siteUrl,
+          `<a href="${siteUrl}" target="_blank">${siteUrl}</a>`
+        );
+
+        // 화면에는 HTML (색 + 링크 적용)
         resultBox.innerHTML = outHtml;
-        // 복사용 텍스트는 outText (copyResult에서 innerText로 처리)
+        // 복사용 텍스트는 copyResult에서 innerText로 처리
       } catch (err) {
         alert(err.message || err);
       }
